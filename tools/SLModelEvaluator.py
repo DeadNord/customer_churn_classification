@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import (
+    ConfusionMatrixDisplay,
     mean_absolute_error,
     mean_absolute_percentage_error,
     r2_score,
@@ -41,23 +42,11 @@ class SLModelEvaluator:
         Plots the confusion matrix.
     """
 
-    def __init__(self, model, X_test, y_test):
+    def __init__(self):
         """
         Инициализация класса SLModelEvaluator.
-
-        Параметры:
-        model: обученная модель
-        X_test: тестовые данные
-        y_test: истинные значения для тестовых данных
         """
-        self.model = model
-        self.X_test = X_test
-        self.y_test = y_test
-        self.y_pred = model.predict(X_test)
-        if hasattr(model, "predict_proba"):
-            self.y_pred_proba = model.predict_proba(X_test)[:, 1]
-        else:
-            self.y_pred_proba = None
+        pass
 
     def display_results(
         self,
@@ -264,4 +253,62 @@ class SLModelEvaluator:
         plt.yticks(range(len(indices)), sorted_features)
         plt.xlabel("Relative Importance")
         plt.gca().invert_yaxis()
+        plt.show()
+
+    def plot_roc_curve(self, model, X_test, y_test):
+        """
+        Plots the ROC curve and displays the AUC score.
+
+        Parameters
+        ----------
+        model : estimator
+            The trained model.
+        X_test : pd.DataFrame
+            Test data.
+        y_test : pd.Series
+            True labels for test data.
+        """
+        if hasattr(model, "predict_proba"):
+            y_pred_proba = model.predict_proba(X_test)[:, 1]
+        else:
+            raise ValueError("The model does not have predict_proba method.")
+
+        fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+        roc_auc = auc(fpr, tpr)
+
+        plt.figure(figsize=(8, 6))
+        plt.plot(
+            fpr,
+            tpr,
+            color="darkorange",
+            lw=2,
+            label=f"ROC curve (area = {roc_auc:.2f})",
+        )
+        plt.plot([0, 1], [0, 1], color="navy", lw=2, linestyle="--")
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("Receiver Operating Characteristic")
+        plt.legend(loc="lower right")
+        plt.show()
+
+    def plot_confusion_matrix(self, model, X_test, y_test):
+        """
+        Plots the confusion matrix for the model.
+
+        Parameters
+        ----------
+        model : trained model
+            The trained model to evaluate.
+        X_test : pd.DataFrame
+            The test data.
+        y_test : pd.Series
+            The true labels for the test data.
+        """
+        y_pred = model.predict(X_test)
+        disp = ConfusionMatrixDisplay.from_estimator(
+            model, X_test, y_test, cmap="Blues"
+        )
+        disp.ax_.set_title("Confusion Matrix")
         plt.show()

@@ -23,7 +23,7 @@ class SLModelTrainer:
     """
 
     def __init__(self):
-        self.best_models = {}
+        self.best_estimators = {}
         self.best_params = {}
         self.best_scores = {}
         self.best_model_name = None
@@ -35,7 +35,7 @@ class SLModelTrainer:
         y_train,
         pipelines,
         param_grids,
-        scoring="neg_mean_absolute_percentage_error",
+        scoring="accuracy",
         cv=5,
     ):
         """
@@ -52,7 +52,7 @@ class SLModelTrainer:
         param_grids : dict
             Dictionary of hyperparameter grids for grid search.
         scoring : str, optional
-            Scoring metric for grid search (default is 'neg_mean_absolute_percentage_error').
+            Scoring metric for grid search (default is 'accuracy').
         cv : int, optional
             Number of cross-validation folds (default is 5).
         """
@@ -62,13 +62,11 @@ class SLModelTrainer:
             )
             grid_search.fit(X_train, y_train)
 
-            self.best_models[model_name] = grid_search.best_estimator_
+            self.best_estimators[model_name] = grid_search.best_estimator_
             self.best_params[model_name] = grid_search.best_params_
-            self.best_scores[model_name] = -grid_search.best_score_
+            self.best_scores[model_name] = grid_search.best_score_
 
             # Update the best model name based on the score
-            if (
-                self.best_model_name is None
-                or self.best_scores[model_name] < self.best_scores[self.best_model_name]
-            ):
+            if self.best_scores[model_name] > self.best_model_score:
                 self.best_model_name = model_name
+                self.best_model_score = self.best_scores[model_name]
