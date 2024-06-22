@@ -115,15 +115,23 @@ class SLModelEvaluator:
             pd.DataFrame(best_params).T.reset_index().rename(columns={"index": "Model"})
         )
 
-        print("Evaluation Metrics for Best Models:")
+        best_model_df = pd.DataFrame(
+            {
+                "Overall Best Model": [best_model_name],
+                "Score (based on cross-validation score)": [
+                    best_scores[best_model_name]
+                ],
+            }
+        )
+
+        print("Evaluation Metrics for Validation Set:")
         display(results_df)
 
-        print("\nBest Parameters for Each Model:")
+        print("\nBest Parameters for Each Model (found during cross-validation):")
         display(param_df)
 
-        print(
-            f"\nOverall Best Model: {best_model_name}, Score: {best_scores[best_model_name]}"
-        )
+        print("\nOverall Best Model and Score (based on cross-validation score):")
+        display(best_model_df)
 
         if help_text:
             print("\nMetric Explanations:")
