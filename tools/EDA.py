@@ -51,6 +51,9 @@ class EDA:
 
     determine_optimal_clusters(features, k_range=(1, 10)):
         Determines the optimal number of clusters using the Elbow method.
+
+    missing_values_percentage():
+        Displays the percentage of missing values in each column along with the average, maximum, and minimum percentages.
     """
 
     def __init__(self, df):
@@ -67,6 +70,55 @@ class EDA:
             self.df = df
         else:
             raise ValueError("The input data must be a pandas DataFrame.")
+
+    def missing_values_percentage(self, target=None):
+        """
+        Displays the percentage of missing values in each column along with additional statistics.
+
+        Parameters
+        ----------
+        target : str, optional
+            The target column to exclude from the calculation (default is None).
+        """
+        if target and target in self.df.columns:
+            df = self.df.drop(columns=[target])
+        else:
+            df = self.df
+
+        missing_ratios = df.isnull().mean() * 100
+        missing_df = pd.DataFrame(
+            {
+                "Column": missing_ratios.index,
+                "Missing Percentage": missing_ratios.values,
+            }
+        ).sort_values(by="Missing Percentage", ascending=False)
+
+        avg_missing = missing_ratios.mean()
+        median_missing = missing_ratios.median()
+        max_missing = missing_ratios.max()
+        min_missing = missing_ratios.min()
+        std_missing = missing_ratios.std()
+        q1_missing = missing_ratios.quantile(0.25)
+        q3_missing = missing_ratios.quantile(0.75)
+        iqr_missing = q3_missing - q1_missing
+
+        summary_df = pd.DataFrame(
+            {
+                "Average Missing Percentage": [avg_missing],
+                "Median Missing Percentage": [median_missing],
+                "Maximum Missing Percentage": [max_missing],
+                "Minimum Missing Percentage": [min_missing],
+                "Standard Deviation of Missing Percentage": [std_missing],
+                "First Quartile (Q1) of Missing Percentage": [q1_missing],
+                "Third Quartile (Q3) of Missing Percentage": [q3_missing],
+                "Interquartile Range (IQR) of Missing Percentage": [iqr_missing],
+            }
+        )
+
+        print("Percentage of Missing Values in Each Column:")
+        display(missing_df)
+        print("\nSummary of Missing Values:")
+        display(summary_df)
 
     def dataset_info(self):
         """
