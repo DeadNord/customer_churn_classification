@@ -10,6 +10,9 @@ class RemoveFeaturesTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         X = X.copy()
-        if len(self.features) > 0:
-            X.drop(columns=self.features, inplace=True)
+        features_to_drop = [
+            feature for feature in self.features if feature in X.columns
+        ]
+        if len(features_to_drop) > 0:
+            X.drop(columns=features_to_drop, inplace=True)
         return X

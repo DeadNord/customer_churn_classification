@@ -18,8 +18,13 @@ from sklearn.metrics import (
 from IPython.display import display
 from sklearn import set_config
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-import seaborn as sns
+from sklearn.ensemble import (
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    HistGradientBoostingClassifier,
+    RandomForestClassifier,
+    RandomForestRegressor,
+)
 
 
 class SLModelEvaluator:
@@ -227,9 +232,17 @@ class SLModelEvaluator:
         set_config(display="diagram")
         return best_models[model_name]
 
-    def feature_importance(self, X_train, y_train, df_original):
+    def feature_importance(
+        self,
+        X_train,
+        y_train,
+        df_original,
+        model_type="random_forest",
+        print_zero_importance=False,
+        importance_threshold=0.0,
+    ):
         """
-        Displays the feature importances using a RandomForest model.
+        Displays the feature importances using a specified ensemble model and outputs a summary table.
 
         Parameters
         ----------
@@ -239,29 +252,79 @@ class SLModelEvaluator:
             Target values for the training data.
         df_original : pd.DataFrame
             Original dataframe with feature names.
+        model_type : str, optional
+            Type of model to use for feature importance ('random_forest', 'gradient_boosting').
+        print_zero_importance : bool, optional
+            Whether to print features with zero importance (default is False).
+        importance_threshold : float, optional
+            Threshold below which features are considered for listing (default is 0.0).
         """
         feature_names = df_original.columns
 
-        forest = (
-            RandomForestClassifier(n_estimators=100, random_state=42)
-            if y_train.nunique() > 2
-            else RandomForestRegressor(n_estimators=100, random_state=42)
-        )
-        forest.fit(X_train, y_train)
+        # Initialize the model
+        if model_type == "random_forest":
+            model = (
+                RandomForestClassifier(n_estimators=100, random_state=42)
+                if y_train.nunique() > 2
+                else RandomForestRegressor(n_estimators=100, random_state=42)
+            )
+        elif model_type == "gradient_boosting":
+            model = (
+                GradientBoostingClassifier(n_estimators=100, random_state=42)
+                if y_train.nunique() > 2
+                else GradientBoostingRegressor(n_estimators=100, random_state=42)
+            )
+        else:
+            raise ValueError(
+                "Unsupported model type. Choose from 'random_forest' or 'gradient_boosting'."
+            )
 
-        importances = forest.feature_importances_
+        # Fit the model
+        model.fit(X_train, y_train)
+
+        # Get feature importances
+        importances = model.feature_importances_
         indices = np.argsort(importances)[::-1]
 
         sorted_importances = importances[indices]
         sorted_features = feature_names[indices]
 
+        # Create a DataFrame for feature importances
+        importance_df = pd.DataFrame(
+            {"Feature": sorted_features, "Importance": sorted_importances}
+        )
+
+        # Plot feature importances
         plt.figure(figsize=(10, 6))
-        plt.title("Feature Importance")
+        plt.title(f"Feature Importance ({model_type.replace('_', ' ').title()})")
         plt.barh(range(len(indices)), sorted_importances, align="center")
         plt.yticks(range(len(indices)), sorted_features)
         plt.xlabel("Relative Importance")
         plt.gca().invert_yaxis()
         plt.show()
+
+        # Print features with low importance if requested
+        if print_zero_importance:
+            low_importance_features = importance_df[
+                importance_df["Importance"] <= importance_threshold
+            ]
+            display(low_importance_features)
+
+            # Summary statistics for low importance features
+            summary_stats = (
+                low_importance_features["Importance"].describe().to_frame().transpose()
+            )
+            summary_stats["sum"] = low_importance_features["Importance"].sum()
+            summary_stats = summary_stats[["mean", "50%", "min", "max", "sum"]]
+            summary_stats.rename(columns={"50%": "median"}, inplace=True)
+
+            print("\nSummary Statistics for Low Importance Features:")
+            display(summary_stats)
+
+            # Prepare the list of low-importance features
+            low_importance_features_list = low_importance_features["Feature"].tolist()
+
+        return low_importance_features_list
 
     def plot_roc_curve(self, model, X_test, y_test):
         """
