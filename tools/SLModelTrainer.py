@@ -37,6 +37,8 @@ class SLModelTrainer:
         param_grids,
         scoring="accuracy",
         cv=5,
+        verbose=0,
+        n_jobs="None",
     ):
         """
         Trains the pipelines with grid search.
@@ -58,7 +60,12 @@ class SLModelTrainer:
         """
         for model_name, pipeline in pipelines.items():
             grid_search = GridSearchCV(
-                pipeline, param_grids[model_name], cv=cv, scoring=scoring
+                pipeline,
+                param_grids[model_name],
+                cv=cv,
+                scoring=scoring,
+                verbose=verbose,
+                n_jobs=n_jobs,
             )
             grid_search.fit(X_train, y_train)
 
