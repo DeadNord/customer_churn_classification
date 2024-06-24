@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
+    balanced_accuracy_score,
     mean_absolute_error,
     mean_absolute_percentage_error,
     r2_score,
@@ -88,6 +89,7 @@ class SLModelEvaluator:
             y_pred = model.predict(X_valid)
             if hasattr(model, "predict_proba"):
                 score = accuracy_score(y_valid, y_pred)
+                balanced_acc = balanced_accuracy_score(y_valid, y_pred)
                 f1 = f1_score(y_valid, y_pred, average="weighted")
                 precision = precision_score(y_valid, y_pred, average="weighted")
                 recall = recall_score(y_valid, y_pred, average="weighted")
@@ -95,6 +97,7 @@ class SLModelEvaluator:
                     {
                         "Model": model_name,
                         "Accuracy": score,
+                        "Balanced Accuracy": balanced_acc,
                         "F1 Score": f1,
                         "Precision": precision,
                         "Recall": recall,
@@ -146,6 +149,11 @@ class SLModelEvaluator:
                 )
                 print("  - Range: [0, 1], higher is better.")
                 print("  - Higher values indicate better model performance.")
+                print(
+                    "Balanced Accuracy: The average of recall obtained on each class."
+                )
+                print("  - Range: [0, 1], higher is better.")
+                print("  - Higher values indicate better model performance.")
                 print("F1 Score: The harmonic mean of precision and recall.")
                 print("  - Range: [0, 1], higher is better.")
                 print("  - Higher values indicate better model performance.")
@@ -194,12 +202,14 @@ class SLModelEvaluator:
         y_pred = best_model.predict(X_test)
         if hasattr(best_model, "predict_proba"):
             score = accuracy_score(y_test, y_pred)
+            balanced_acc = balanced_accuracy_score(y_test, y_pred)
             f1 = f1_score(y_test, y_pred, average="weighted")
             precision = precision_score(y_test, y_pred, average="weighted")
             recall = recall_score(y_test, y_pred, average="weighted")
             evaluation_df = pd.DataFrame(
                 {
                     "Accuracy": [score],
+                    "Balanced Accuracy": [balanced_acc],
                     "F1 Score": [f1],
                     "Precision": [precision],
                     "Recall": [recall],
