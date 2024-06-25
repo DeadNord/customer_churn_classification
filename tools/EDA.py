@@ -462,3 +462,42 @@ class EDA:
         ]
 
         display(vif_data)
+
+    def missing_values_percentage_rows(self):
+        """
+        Displays the percentage of missing values in each row along with additional statistics.
+        """
+        missing_ratios = self.df.isnull().mean(axis=1) * 100
+        missing_df = pd.DataFrame(
+            {
+                "Row Index": self.df.index,
+                "Missing Percentage": missing_ratios.values,
+            }
+        ).sort_values(by="Missing Percentage", ascending=False)
+
+        avg_missing = missing_ratios.mean()
+        median_missing = missing_ratios.median()
+        max_missing = missing_ratios.max()
+        min_missing = missing_ratios.min()
+        std_missing = missing_ratios.std()
+        q1_missing = missing_ratios.quantile(0.25)
+        q3_missing = missing_ratios.quantile(0.75)
+        iqr_missing = q3_missing - q1_missing
+
+        summary_df = pd.DataFrame(
+            {
+                "Average Missing Percentage": [avg_missing],
+                "Median Missing Percentage": [median_missing],
+                "Maximum Missing Percentage": [max_missing],
+                "Minimum Missing Percentage": [min_missing],
+                "Standard Deviation of Missing Percentage": [std_missing],
+                "First Quartile (Q1) of Missing Percentage": [q1_missing],
+                "Third Quartile (Q3) of Missing Percentage": [q3_missing],
+                "Interquartile Range (IQR) of Missing Percentage": [iqr_missing],
+            }
+        )
+
+        print("Percentage of Missing Values in Each Row:")
+        display(missing_df)
+        print("\nSummary of Missing Values:")
+        display(summary_df)
