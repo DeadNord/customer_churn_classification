@@ -6,6 +6,7 @@ import seaborn as sns
 from IPython.display import display
 from yellowbrick.cluster import KElbowVisualizer
 from sklearn.cluster import KMeans
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 class EDA:
@@ -446,3 +447,18 @@ class EDA:
         self.descriptive_statistics()
         self.missing_values()
         self.sample_data()
+
+    def multicollinearity_table(self):
+        """
+        Displays a table of Variance Inflation Factor (VIF) for each feature to assess multicollinearity.
+        """
+        numeric_columns = self.df.select_dtypes(include=["number"]).columns
+        X = self.df[numeric_columns].dropna()
+
+        vif_data = pd.DataFrame()
+        vif_data["Feature"] = X.columns
+        vif_data["VIF"] = [
+            variance_inflation_factor(X.values, i) for i in range(len(X.columns))
+        ]
+
+        display(vif_data)
