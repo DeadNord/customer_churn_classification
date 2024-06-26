@@ -183,13 +183,17 @@ class EDA:
         y : str, optional
             The target column to plot histograms against all numeric columns (default is None).
         """
+        # Exclude columns that have only NaN values
         numeric_columns = self.df.select_dtypes(include=["int64", "float64"]).columns
+        numeric_columns = [
+            col for col in numeric_columns if not self.df[col].isna().all()
+        ]
 
         if y and y in numeric_columns:
             for column in numeric_columns:
                 if column != y:
                     plt.figure(figsize=(10, 6))
-                    plt.hist(self.df[column], bins=30, edgecolor="black")
+                    plt.hist(self.df[column].dropna(), bins=30, edgecolor="black")
                     plt.title(f"Histogram of {column} vs {y}")
                     plt.xlabel(column)
                     plt.ylabel(y)
@@ -197,7 +201,7 @@ class EDA:
         else:
             for column in numeric_columns:
                 plt.figure(figsize=(10, 6))
-                plt.hist(self.df[column], bins=30, edgecolor="black")
+                plt.hist(self.df[column].dropna(), bins=30, edgecolor="black")
                 plt.title(f"Histogram of {column}")
                 plt.xlabel(column)
                 plt.ylabel("Frequency")
